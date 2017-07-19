@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ChoregrapheProject xmlns="http://www.aldebaran-robotics.com/schema/choregraphe/project.xsd" xar_version="3">
+    <Box name="root" id="-1" localization="8" tooltip="Root box of Choregraphe&apos;s behavior. Highest level possible." x="0" y="0">
+        <bitmap>media/images/box/root.png</bitmap>
+        <script language="4">
+            <content>
+                <![CDATA[]]>
+</content>
+        </script>
+        <Input name="onLoad" type="1" type_size="1" nature="0" inner="1" tooltip="Signal sent when diagram is loaded." id="1" />
+        <Input name="onStart" type="1" type_size="1" nature="2" inner="0" tooltip="Box behavior starts when a signal is received on this input." id="2" />
+        <Input name="onStop" type="1" type_size="1" nature="3" inner="0" tooltip="Box behavior stops when a signal is received on this input." id="3" />
+        <Output name="onStopped" type="1" type_size="1" nature="1" inner="0" tooltip="Signal sent when box behavior is finished." id="4" />
+        <Timeline enable="0">
+            <BehaviorLayer name="behavior_layer1">
+                <BehaviorKeyframe name="keyframe1" index="1">
+                    <Diagram>
+                        <Box name="Markov" id="1" localization="8" tooltip="Generate Sentences" x="251" y="88">
+                            <bitmap>media/images/box/box-python-script.png</bitmap>
+                            <script language="4">
+                                <content>
+                                    <![CDATA[import os
+import pickle
+import random
+
+class MyClass(GeneratedClass):
+    def __init__(self):
+        GeneratedClass.__init__(self)
+        self.data = {}
+        self.feed_text = ""
+
+    def onLoad(self):
+        #put initialization code here
+        self.words = self.getParameter("words")
+        if self.words:
+            self.separator = " "
+        else:
+            self.separator = ""
+        self.init_markov()
+
+    def onUnload(self):
+        #put clean-up code here
+        pass
+
+    def onInput_onStart(self):
+        #self.onStopped() #activate the output of the box
+        self.onStopped(self.generate_sentence(self.getParameter("sentence_length")))
+
+    def init_markov(self):
+        if self.words:
+            self.file_name = os.path.join(ALFrameManager.getBehaviorPath(self.behaviorId),"words_markov.pkl")
+        else:
+            self.file_name = os.path.join(ALFrameManager.getBehaviorPath(self.behaviorId),"trigrams_markov.pkl")
+        if os.path.isfile(self.file_name):
+            self.open_data()
+        else:
+            feed_name = os.path.join(ALFrameManager.getBehaviorPath(self.behaviorId), "text.txt")
+            self.save_data(feed_name)
+
+    def open_data(self):
+        data_file = open(self.file_name, "rb")
+        self.data = pickle.load(data_file)
+        #print (str(self.dData))
+        data_file.close()
+        return
+
+    def save_data(self, feed_name):
+        with open(feed_name) as feed_file:
+            self.feed_text = feed_file.read()
+        feed_file.close()
+        self.feed_data(self.feed_text)
+        return
+
+    def feed_data(self, to_feed):
+        self.feed_text = to_feed
+        #print (self.sText)
+        triples = self.generate_triples(self.feed_text)
+        #print (str(triples))
+        for a,b,c in triples:
+            try:
+                self.data[(a, b)].append(c)
+            except:
+                self.data[(a, b)] = [c]
+        with open(self.file_name, "wb") as data_file:
+            pickle.dump(self.data, data_file)
+        data_file.close()
+        return
+
+    def generate_triples(self, text):
+        if self.words:
+            words = text.split()
+        else:
+            words = [text[i:i+3] for i in xrange(len(text)-3)]
+        #print (str(aWords))
+        triples = []
+        if len(words) <3:
+            return []
+        for i in range(len(words) -2):
+            triples.append((words[i].replace("\'", "'").replace("\\", ""), words[i + 1].replace("\'", "'").replace("\\", ""), words[i + 2].replace("\'", "'").replace("\\", "")))
+        return triples
+
+    def generate_sentence(self, number_words):
+        keys = []
+        for i in self.data.keys():
+            if i[0][0].isupper():
+                keys.append(i)
+        choose_tuple = random.choice(keys)
+        sentence_1 = choose_tuple[0]
+        sentence_2 = choose_tuple[1]
+        sentence_3 = random.choice(self.data[choose_tuple])
+        if self.words:
+            sentence_elems = [sentence_1, sentence_2, sentence_3]
+        else:
+            sentence_elems = [sentence_1, sentence_2[-1], sentence_3[-1]]
+        #print (str(tTuple))
+        while (len(sentence_elems) < number_words) or ((len(sentence_elems) >= number_words) and not sentence_3.endswith(".")and not sentence_3.endswith("!")and not sentence_3.endswith("?")):
+            sentence_1, sentence_2 = sentence_2, sentence_3
+            sentence_3 = random.choice(self.data[(sentence_1, sentence_2)])
+            if self.words:
+                sentence_elems.append(sentence_3)
+            else:
+                sentence_elems.append(sentence_3[-1])
+        generated_sentence = self.separator.join(sentence_elems)
+        return generated_sentence
+
+    def onInput_onStop(self):
+        self.onUnload() #it is recommended to reuse the clean-up as the box is stopped
+        self.onStopped() #activate the output of the box]]>
+</content>
+                            </script>
+                            <Input name="onLoad" type="1" type_size="1" nature="0" inner="1" tooltip="Signal sent when diagram is loaded." id="1" />
+                            <Input name="onStart" type="1" type_size="1" nature="2" inner="0" tooltip="Box behavior starts when a signal is received on this input." id="2" />
+                            <Input name="onStop" type="1" type_size="1" nature="3" inner="0" tooltip="Box behavior stops when a signal is received on this input." id="3" />
+                            <Output name="onStopped" type="3" type_size="1" nature="1" inner="0" tooltip="Signal sent when box behavior is finished." id="4" />
+                            <Parameter name="sentence_length" inherits_from_parent="0" content_type="1" value="50" default_value="100" min="5" max="500" tooltip="" id="5" />
+                            <Parameter name="words" inherits_from_parent="0" content_type="0" value="1" default_value="1" tooltip="True: wirds, False: trigrams" id="6" />
+                        </Box>
+                        <Box name="WakeUp" id="2" localization="0" tooltip="Call a Wake Up process.&#x0A;Stiff all joints and apply stand Init posture if the robot is Stand" x="114" y="89">
+                            <bitmap>media/images/box/movement/stiffness.png</bitmap>
+                            <script language="4">
+                                <content>
+                                    <![CDATA[class MyClass(GeneratedClass):
+    def __init__(self):
+        GeneratedClass.__init__(self)
+        pass
+
+    def onLoad(self):
+        self.motion = ALProxy("ALMotion")
+        pass
+
+    def onUnload(self):
+        pass
+
+    def onInput_onStart(self):
+        self.motion.wakeUp()
+        self.onStopped() #~ activate output of the box
+        pass
+
+    def onInput_onStop(self):
+        self.onUnload() #~ it is recommended to call onUnload of this box in a onStop method, as the code written in onUnload is used to stop the box as well
+        pass]]>
+</content>
+                            </script>
+                            <Input name="onLoad" type="1" type_size="1" nature="0" inner="1" tooltip="Signal sent when diagram is loaded." id="1" />
+                            <Input name="onStart" type="1" type_size="1" nature="2" inner="0" tooltip="Box behavior starts when a signal is received on this input." id="2" />
+                            <Input name="onStop" type="1" type_size="1" nature="3" inner="0" tooltip="Box behavior stops when a signal is received on this input." id="3" />
+                            <Output name="onStopped" type="1" type_size="1" nature="1" inner="0" tooltip="Signal sent when box behavior is finished." id="4" />
+                            <Resource name="All motors" type="Lock" timeout="0" />
+                            <Resource name="Stiffness" type="Lock" timeout="0" />
+                        </Box>
+                        <Box name="Animated Say Text" id="4" localization="8" tooltip="Say the text received on its input and move during its speech." x="386" y="84">
+                            <bitmap>media/images/box/interaction/say.png</bitmap>
+                            <script language="4">
+                                <content>
+                                    <![CDATA[import time
+
+class MyClass(GeneratedClass):
+    def __init__(self):
+        GeneratedClass.__init__(self, False)
+        self.animSpeech = ALProxy('ALAnimatedSpeech')
+
+    def onLoad(self):
+        self.bIsRunning = False
+        self.ids = []
+
+    def onUnload(self):
+        for id in self.ids:
+            try:
+                self.animSpeech.stop(id)
+            except:
+                pass
+
+    def onInput_onStart(self, p):
+        self.bIsRunning = True
+        try:
+            sentence = "\RSPD="+ str( self.getParameter("Speed (%)") ) + "\ "
+            sentence += "\VCT="+ str( self.getParameter("Voice shaping (%)") ) + "\ "
+            sentence += str(p)
+            sentence +=  "\RST\ "
+            configuration =\
+            {"speakingMovementMode":self.getParameter("Speaking movement mode")}
+            id = self.animSpeech.post.say(str(sentence), configuration)
+            self.ids.append(id)
+            self.animSpeech.wait(id, 0)
+        finally:
+            try:
+                self.ids.remove(id)
+            except:
+                pass
+            if( self.ids == [] ):
+                self.onStopped() # activate output of the box
+                self.bIsRunning = False
+
+    def onInput_onStop(self):
+        self.onUnload()]]>
+</content>
+                            </script>
+                            <Input name="onLoad" type="1" type_size="1" nature="0" inner="1" tooltip="Signal sent when Diagram is loaded." id="1" />
+                            <Input name="onStart" type="3" type_size="1" nature="2" inner="0" tooltip="Box behavior starts when a signal is received on this Input." id="2" />
+                            <Input name="onStop" type="1" type_size="1" nature="3" inner="0" tooltip="Box behavior stops when a signal is received on this Input." id="3" />
+                            <Output name="onStopped" type="1" type_size="1" nature="1" inner="0" tooltip="Signal sent when Box behavior is finished." id="4" />
+                            <Parameter name="Voice shaping (%)" inherits_from_parent="1" content_type="1" value="100" default_value="100" min="50" max="150" tooltip='Used to modify at runtime the voice feature (tone, speed). In a slighty&#x0A;different way than pitch and speed, it gives a kind of &quot;gender or age&#x0A;modification&quot; effect.&#x0A;&#x0A;For instance, a quite good male derivation of female voice can be&#x0A;obtained setting this parameter to 78%.&#x0A;&#x0A;Note: For a better effect, you can compensate this parameter with the&#x0A;speed parameter. For example, if you want to decrease by 20% the voice&#x0A;shaping, you will have to increase by 20% the speed to keep a constant&#x0A;average speed.' id="5" />
+                            <Parameter name="Speed (%)" inherits_from_parent="1" content_type="1" value="100" default_value="100" min="50" max="200" tooltip="Changes the speed of the voice.&#x0A;&#x0A;Note: For a better effect, you can compensate this parameter with the voice&#x0A;shaping parameter. For example, if you want to increase by 20% the speed, you&#x0A;will have to decrease by 20% the voice shaping to keep a constant average&#x0A;speed." id="6" />
+                            <Parameter name="Speaking movement mode" inherits_from_parent="1" content_type="3" value="contextual" default_value="contextual" custom_choice="0" tooltip="Change the body language mode during the speech.&#x0A;disabled: The robot will only play the animations given by the user. ex: ^start(...) or ^tag(...)&#x0A;random: During time the robot has no animation to play, he will launch random neutral animations.&#x0A;contextual: During time the robot has no animation to play, he will try to launch a new one accordingly to the saying text. Every time the robot can&apos;t find a contextual animation he will launch a random neutral animation." id="7">
+                                <Choice value="disabled" />
+                                <Choice value="random" />
+                                <Choice value="contextual" />
+                            </Parameter>
+                        </Box>
+                        <Link inputowner="1" indexofinput="2" outputowner="2" indexofoutput="4" />
+                        <Link inputowner="4" indexofinput="2" outputowner="1" indexofoutput="4" />
+                        <Link inputowner="0" indexofinput="4" outputowner="4" indexofoutput="4" />
+                        <Link inputowner="2" indexofinput="2" outputowner="0" indexofoutput="2" />
+                    </Diagram>
+                </BehaviorKeyframe>
+            </BehaviorLayer>
+        </Timeline>
+    </Box>
+</ChoregrapheProject>
