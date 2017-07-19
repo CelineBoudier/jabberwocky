@@ -60,7 +60,6 @@ class MyClass(GeneratedClass):
     def open_data(self):
         data_file = open(self.file_name, "rb")
         self.data = pickle.load(data_file)
-        #print (str(self.dData))
         data_file.close()
         return
 
@@ -73,9 +72,7 @@ class MyClass(GeneratedClass):
 
     def feed_data(self, to_feed):
         self.feed_text = to_feed
-        #print (self.sText)
         triples = self.generate_triples(self.feed_text)
-        #print (str(triples))
         for a,b,c in triples:
             try:
                 self.data[(a, b)].append(c)
@@ -91,7 +88,6 @@ class MyClass(GeneratedClass):
             words = text.split()
         else:
             words = [text[i:i+3] for i in xrange(len(text)-3)]
-        #print (str(aWords))
         triples = []
         if len(words) <3:
             return []
@@ -112,7 +108,6 @@ class MyClass(GeneratedClass):
             sentence_elems = [sentence_1, sentence_2, sentence_3]
         else:
             sentence_elems = [sentence_1, sentence_2[-1], sentence_3[-1]]
-        #print (str(tTuple))
         while (len(sentence_elems) < number_words) or ((len(sentence_elems) >= number_words) and not sentence_3.endswith(".")and not sentence_3.endswith("!")and not sentence_3.endswith("?")):
             sentence_1, sentence_2 = sentence_2, sentence_3
             sentence_3 = random.choice(self.data[(sentence_1, sentence_2)])
