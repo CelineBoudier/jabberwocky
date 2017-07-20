@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<package version="0.0.0" uuid="markovwords-488a4e">
+<package uuid="markovwords-488a4e" version="0.0.0">
  <names>
   <name lang="en_US">Markov Words</name>
  </names>
