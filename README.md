@@ -10,7 +10,8 @@ How does it work? Trigrams! I created trigrams frequency lists for English and F
 
 Gibberish detection! Since this method is statistical, it works when there are some spelling mistakes, and for English- or French-"looking" gibberish. You can try it on the non-sense poem Jabberwocky by Lewis Carroll! (Unlike hacker's dictionary methods)
 
-Gibberish synthesis! For fun, art, or when NAO doesn't know what to say, you might want him to speak in gibberish. I also a method to create full gibberish using the same trigram method. I'm planning to provide another gibberish generator using Markov chains later.
+Gibberish synthesis! For fun, art, or when NAO doesn't know what to say, you might want him to speak in gibberish. I'm providing a gibberish generator using Markov chains, for words and trigrams (behaviour called Markov Words).
+A small Python script also generates anti-texts (texts with words recursively antonimised) :)
 
 Content
 =======
